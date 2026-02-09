@@ -191,9 +191,10 @@ function setupAuto() {
 }
 
 
-runBtn.addEventListener("click", () => {
-  run();
+runBtn.addEventListener("click", async () => {
+  await runFull();
   setupAuto();
 });
+
 
 refreshSecEl.addEventListener("change", setupAuto);
