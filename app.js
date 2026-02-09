@@ -118,7 +118,12 @@ function renderChart(labels, values, base, quote) {
 }
 
 // ---- main action ----
-async function run() {
+let currentBase = null;
+let currentQuote = null;
+let currentDays = 30;
+let chartInitialized = false;
+
+async function runFull() {
   note.textContent = "";
   pairText.textContent = "-";
   rateText.textContent = "-";
@@ -136,24 +141,44 @@ async function run() {
 
   try {
     const [curA, curB] = await Promise.all([countryToCurrency(a), countryToCurrency(b)]);
+
+    currentBase = curA;
+    currentQuote = curB;
+    currentDays = days;
+
     infoA.textContent = `通貨: ${curA}`;
     infoB.textContent = `通貨: ${curB}`;
-
     pairText.textContent = `${curA}/${curB}`;
 
+    // 最新レート表示
     const latest = await fetchLatest(curA, curB);
     rateText.textContent = `1 ${curA} = ${Number(latest.rate).toFixed(4)} ${curB}`;
     timeText.textContent = fmtTime(new Date());
 
-
+    // グラフは「最初に1回だけ」作る
     const hist = await fetchHistory(curA, curB, days);
     renderChart(hist.labels, hist.values, curA, curB);
+    chartInitialized = true;
 
   } catch (e) {
     note.textContent = `エラー: ${e.message}（国名は英語がおすすめ：Japan / United States）`;
     console.error(e);
   }
 }
+
+async function runLatestOnly() {
+  // まだ初期化できてないなら何もしない
+  if (!currentBase || !currentQuote) return;
+
+  try {
+    const latest = await fetchLatest(currentBase, currentQuote);
+    rateText.textContent = `1 ${currentBase} = ${Number(latest.rate).toFixed(4)} ${currentQuote}`;
+    timeText.textContent = fmtTime(new Date());
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 
 // ---- auto refresh ----
 function setupAuto() {
