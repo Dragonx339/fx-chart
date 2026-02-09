@@ -50,7 +50,7 @@ async function countryToCurrency(countryName) {
 // ---- FX (Frankfurter) ----
 async function fetchLatest(base, quote) {
   // Frankfurter API
-  const url = `https://api.frankfurter.app/latest?base=${base}&symbols=${quote}`;
+　rateText.textContent = `1 ${base} = ${Number(rate).toFixed(4)} ${quote}`;
   const data = await fetchJSON(url);
   const rate = data?.rates?.[quote];
   if (!rate) throw new Error("Rate missing");
