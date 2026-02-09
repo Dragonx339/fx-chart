@@ -1,147 +1,170 @@
-Sadconst $ = (id) => document.getElementById(id);
+// ===== fx-chart app.js (no jQuery) =====
 
-const countryAEl = $("countryA");
-const countryBEl = $("countryB");
-const infoAEl = $("infoA");
-const infoBEl = $("infoB");
-const daysEl = $("days");
-const refreshSecEl = $("refreshSec");
-const runBtn = $("runBtn");
+// ---- DOM ----
+const el = (id) => document.getElementById(id);
 
-const pairText = $("pairText");
-const rateText = $("rateText");
-const timeText = $("timeText");
-const noteEl = $("note");
+const countryA = el("countryA");
+const countryB = el("countryB");
+const daysEl = el("days");
+const refreshSecEl = el("refreshSec");
+const runBtn = el("runBtn");
+
+const infoA = el("infoA");
+const infoB = el("infoB");
+const pairText = el("pairText");
+const rateText = el("rateText");
+const timeText = el("timeText");
+const note = el("note");
 
 let chart = null;
 let timer = null;
 
-function isoDate(d) {
-  return d.toISOString().slice(0, 10);
+// ---- helpers ----
+function fmtTime(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-async function fetchCountryCurrency(countryName) {
-  // REST Countries: /v3.1/name/{name}
-  // 返り値は配列。いちばん先頭を採用して通貨コードを取る（c.currencies は object）
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+  return await r.json();
+}
+
+// ---- country -> currency (REST Countries) ----
+async function countryToCurrency(countryName) {
+  // REST Countries v3.1
   const url = `https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=false`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`国が見つからない: ${countryName}`);
-  const data = await res.json();
-  const c = data?.[0];
-  const currencies = c?.currencies;
-  if (!currencies || typeof currencies !== "object") throw new Error(`通貨情報が取れない: ${countryName}`);
-  const code = Object.keys(currencies)[0]; // 例: JPY, USD
-  const name = currencies[code]?.name ?? "";
-  return { code, name, country: c?.name?.common ?? countryName };
-}
+  const data = await fetchJSON(url);
 
-async function fetchLatest(base, quote) {
-  // Frankfurter latest
-  const url = `https://api.frankfurter.dev/v1/latest?base=${encodeURIComponent(base)}&symbols=${encodeURIComponent(quote)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("レート取得失敗(latest)");
-  return await res.json();
-}
-
-async function fetchTimeseries(base, quote, start, end) {
-  // Frankfurter time series
-  const url =
-    `https://api.frankfurter.dev/v1/${start}..${end}?base=${encodeURIComponent(base)}&symbols=${encodeURIComponent(quote)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("レート取得失敗(timeseries)");
-  return await res.json();
-}
-
-function setMeta(pair, latestRate, dateText) {
-  pairText.textContent = pair;
-  rateText.textContent = latestRate;
-  timeText.textContent = dateText;
-}
-
-function destroyTimer() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
+  if (!Array.isArray(data) || !data[0] || !data[0].currencies) {
+    throw new Error("Country not found / currencies missing");
   }
+
+  // 1つ目の通貨コードを使う（例: { JPY: {...} }）
+  const codes = Object.keys(data[0].currencies);
+  if (!codes.length) throw new Error("No currency code");
+  return codes[0];
 }
 
-function scheduleRefresh(fn) {
-  destroyTimer();
-  const sec = Number(refreshSecEl.value);
-  if (!Number.isFinite(sec) || sec <= 0) return;
-  timer = setInterval(fn, sec * 1000);
+// ---- FX (Frankfurter) ----
+async function fetchLatest(base, quote) {
+  // Frankfurter API
+  const url = `https://api.frankfurter.app/latest?base=${base}&symbols=${quote}`;
+  const data = await fetchJSON(url);
+  const rate = data?.rates?.[quote];
+  if (!rate) throw new Error("Rate missing");
+  return { rate, date: data.date };
 }
 
-function upsertChart(labels, values, labelName) {
-  const ctx = $("chart");
+async function fetchHistory(base, quote, days) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - (days - 1));
+
+  const toISO = (d) => d.toISOString().slice(0, 10);
+  const url = `https://api.frankfurter.app/${toISO(start)}..${toISO(end)}?base=${base}&symbols=${quote}`;
+  const data = await fetchJSON(url);
+
+  const ratesObj = data?.rates || {};
+  const labels = Object.keys(ratesObj).sort(); // YYYY-MM-DD
+  const values = labels.map((k) => ratesObj[k]?.[quote]).filter((v) => typeof v === "number");
+
+  // labelsとvaluesの長さズレ防止
+  const fixedLabels = [];
+  const fixedValues = [];
+  labels.forEach((k) => {
+    const v = ratesObj[k]?.[quote];
+    if (typeof v === "number") {
+      fixedLabels.push(k);
+      fixedValues.push(v);
+    }
+  });
+
+  if (!fixedValues.length) throw new Error("No history data");
+  return { labels: fixedLabels, values: fixedValues };
+}
+
+// ---- chart ----
+function renderChart(labels, values, base, quote) {
+  const ctx = el("chart").getContext("2d");
   if (chart) chart.destroy();
+
   chart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: [{ label: labelName, data: values, tension: 0.25 }]
+      datasets: [
+        {
+          label: `${base}/${quote}`,
+          data: values,
+          tension: 0.25,
+          pointRadius: 0
+        }
+      ]
     },
     options: {
       responsive: true,
-      interaction: { mode: "index", intersect: false },
+      maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: "#e8eefc" } }
+        legend: { display: true }
       },
       scales: {
-        x: { ticks: { color: "#e8eefc" }, grid: { color: "rgba(232,238,252,0.08)" } },
-        y: { ticks: { color: "#e8eefc" }, grid: { color: "rgba(232,238,252,0.08)" } }
+        x: { ticks: { maxTicksLimit: 8 } }
       }
     }
   });
 }
 
-async function runOnce() {
-  const aName = countryAEl.value.trim();
-  const bName = countryBEl.value.trim();
-  if (!aName || !bName) throw new Error("国Aと国Bを両方入れてね");
+// ---- main action ----
+async function run() {
+  note.textContent = "";
+  pairText.textContent = "-";
+  rateText.textContent = "-";
+  timeText.textContent = "-";
 
-  const days = Math.max(7, Math.min(365, Number(daysEl.value) || 30));
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - days);
+  const a = countryA.value.trim();
+  const b = countryB.value.trim();
+  const days = Math.max(7, Math.min(365, Number(daysEl.value || 30)));
+  daysEl.value = String(days);
 
-  // 1) 国→通貨
-  const [a, b] = await Promise.all([
-    fetchCountryCurrency(aName),
-    fetchCountryCurrency(bName)
-  ]);
+  if (!a || !b) {
+    note.textContent = "国Aと国Bを入力してね（例: Japan / United States）";
+    return;
+  }
 
-  infoAEl.textContent = `通貨: ${a.code} ${a.name ? `(${a.name})` : ""} / 国: ${a.country}`;
-  infoBEl.textContent = `通貨: ${b.code} ${b.name ? `(${b.name})` : ""} / 国: ${b.country}`;
-
-  // 2) latest
-  const latest = await fetchLatest(a.code, b.code);
-  const latestRate = latest?.rates?.[b.code];
-  if (latestRate == null) throw new Error("最新レートが取れなかった");
-  setMeta(`${a.code}/${b.code}`, `${latestRate}`, `${latest.date} (source: Frankfurter)`);
-
-  // 3) timeseries
-  const ts = await fetchTimeseries(a.code, b.code, isoDate(start), isoDate(end));
-  const rates = ts?.rates || {};
-  const labels = Object.keys(rates).sort(); // "YYYY-MM-DD"
-  const values = labels.map(d => rates[d]?.[b.code]).filter(v => typeof v === "number");
-
-  upsertChart(labels, values, `${a.code} → ${b.code}`);
-  noteEl.textContent =
-    "※ Frankfurter はECB等の公開レート基準で、超秒単位の相場ではなく日次/定期更新が中心。見た目の自動更新は可能。";
-}
-
-async function runAll() {
   try {
-    noteEl.textContent = "";
-    await runOnce();
-    scheduleRefresh(async () => {
-      try { await runOnce(); } catch (e) { /* 連続エラーは黙って止めない */ }
-    });
+    const [curA, curB] = await Promise.all([countryToCurrency(a), countryToCurrency(b)]);
+    infoA.textContent = `通貨: ${curA}`;
+    infoB.textContent = `通貨: ${curB}`;
+
+    pairText.textContent = `${curA}/${curB}`;
+
+    const latest = await fetchLatest(curA, curB);
+    rateText.textContent = String(latest.rate);
+    timeText.textContent = fmtTime(new Date());
+
+    const hist = await fetchHistory(curA, curB, days);
+    renderChart(hist.labels, hist.values, curA, curB);
+
   } catch (e) {
-    destroyTimer();
-    noteEl.textContent = `エラー: ${e.message}`;
+    note.textContent = `エラー: ${e.message}（国名は英語がおすすめ：Japan / United States）`;
+    console.error(e);
   }
 }
 
-runBtn.addEventListener("click", runAll);
+// ---- auto refresh ----
+function setupAuto() {
+  if (timer) clearInterval(timer);
+  const sec = Number(refreshSecEl.value || 0);
+  if (sec > 0) {
+    timer = setInterval(run, sec * 1000);
+  }
+}
+
+runBtn.addEventListener("click", () => {
+  run();
+  setupAuto();
+});
+
+refreshSecEl.addEventListener("change", setupAuto);
