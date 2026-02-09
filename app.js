@@ -142,8 +142,9 @@ async function run() {
     pairText.textContent = `${curA}/${curB}`;
 
     const latest = await fetchLatest(curA, curB);
-    rateText.textContent = String(latest.rate);
+    rateText.textContent = `1 ${curA} = ${Number(latest.rate).toFixed(4)} ${curB}`;
     timeText.textContent = fmtTime(new Date());
+
 
     const hist = await fetchHistory(curA, curB, days);
     renderChart(hist.labels, hist.values, curA, curB);
