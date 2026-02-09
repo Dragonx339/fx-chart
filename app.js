@@ -47,15 +47,16 @@ async function countryToCurrency(countryName) {
   return codes[0];
 }
 
-// ---- FX (Frankfurter) ----
 async function fetchLatest(base, quote) {
-  // Frankfurter API
-　rateText.textContent = `1 ${base} = ${Number(rate).toFixed(4)} ${quote}`;
+  const url = `https://api.frankfurter.app/latest?base=${base}&symbols=${quote}`;
   const data = await fetchJSON(url);
+
   const rate = data?.rates?.[quote];
-  if (!rate) throw new Error("Rate missing");
+  if (typeof rate !== "number") throw new Error("Rate missing");
+
   return { rate, date: data.date };
 }
+
 
 async function fetchHistory(base, quote, days) {
   const end = new Date();
