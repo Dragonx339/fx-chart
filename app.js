@@ -183,11 +183,13 @@ async function runLatestOnly() {
 // ---- auto refresh ----
 function setupAuto() {
   if (timer) clearInterval(timer);
+
   const sec = Number(refreshSecEl.value || 0);
   if (sec > 0) {
-    timer = setInterval(run, sec * 1000);
+    timer = setInterval(runLatestOnly, sec * 1000);
   }
 }
+
 
 runBtn.addEventListener("click", () => {
   run();
