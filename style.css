@@ -57,3 +57,14 @@ hr { border: none; border-top: 1px solid #233255; margin: 14px 0; }
 #refreshSec{
   max-width: 200px;
 }
+
+/* Chart.js が無限に大きくなるのを防ぐ */
+.chartBox{
+  height: 320px;       /* 好きに変更OK: 240〜420くらい */
+}
+
+#chart{
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
