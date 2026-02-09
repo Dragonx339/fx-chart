@@ -18,3 +18,20 @@ hr { border: none; border-top: 1px solid #233255; margin: 14px 0; }
 @media (max-width: 760px) {
   .row, .row2, .stats { grid-template-columns: 1fr; }
 }
+
+/* ---- Fix layout shift for the 2nd row (days / refresh / button) ---- */
+.row2{
+  grid-template-columns: 1fr 1fr 140px; /* ボタン幅を固定 */
+  align-items: end;                      /* 入力の下端に揃える */
+}
+
+.row2 button{
+  height: 42px;          /* inputと高さを合わせる */
+  padding: 0 14px;
+  align-self: end;       /* さらに確実に下に揃える */
+}
+
+.field input{
+  height: 42px;          /* inputも高さ固定 */
+  box-sizing: border-box;
+}
