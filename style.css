@@ -1,0 +1,20 @@
+:root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+body { margin: 0; background: #0b0f17; color: #e8eefc; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+h1 { font-size: 20px; margin: 8px 0 16px; }
+.card { background: #111a2b; border: 1px solid #233255; border-radius: 14px; padding: 16px; margin: 12px 0; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row2 { grid-template-columns: 1fr 1fr auto; align-items: end; margin-top: 12px; }
+.field label { display: block; font-size: 12px; opacity: .9; margin-bottom: 6px; }
+.field input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a3b64; background: #0c1426; color: #e8eefc; outline: none; }
+.field small { display: block; margin-top: 6px; opacity: .8; }
+button { padding: 10px 14px; border-radius: 10px; border: 1px solid #2a3b64; background: #1a2c55; color: #e8eefc; cursor: pointer; }
+button:hover { filter: brightness(1.08); }
+hr { border: none; border-top: 1px solid #233255; margin: 14px 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.k { font-size: 12px; opacity: .85; }
+.v { font-size: 16px; margin-top: 4px; }
+.note { margin: 10px 2px 0; opacity: .8; font-size: 12px; }
+@media (max-width: 760px) {
+  .row, .row2, .stats { grid-template-columns: 1fr; }
+}

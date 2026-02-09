@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Country FX Chart</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <main class="wrap">
+    <h1>国名入力 → 為替表示 + 折線グラフ</h1>
+
+    <section class="card">
+      <div class="row">
+        <div class="field">
+          <label>国A（例: Japan / 日本 / United States）</label>
+          <input id="countryA" placeholder="Japan" />
+          <small id="infoA">通貨: -</small>
+        </div>
+
+        <div class="field">
+          <label>国B（例: United States / USA / France）</label>
+          <input id="countryB" placeholder="United States" />
+          <small id="infoB">通貨: -</small>
+        </div>
+      </div>
+
+      <div class="row row2">
+        <div class="field">
+          <label>表示する期間（日数）</label>
+          <input id="days" type="number" min="7" max="365" value="30" />
+        </div>
+
+        <div class="field">
+          <label>自動更新（秒）</label>
+          <input id="refreshSec" type="number" min="0" max="3600" value="30" />
+          <small>0 にすると停止</small>
+        </div>
+
+        <button id="runBtn">表示する</button>
+      </div>
+
+      <hr />
+
+      <div class="stats">
+        <div>
+          <div class="k">通貨ペア</div>
+          <div class="v" id="pairText">-</div>
+        </div>
+        <div>
+          <div class="k">最新レート</div>
+          <div class="v" id="rateText">-</div>
+        </div>
+        <div>
+          <div class="k">更新日時</div>
+          <div class="v" id="timeText">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <canvas id="chart" height="120"></canvas>
+      <p class="note" id="note"></p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
