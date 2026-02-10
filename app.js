@@ -6,7 +6,6 @@ const el = (id) => document.getElementById(id);
 const countryA = el("countryA");
 const countryB = el("countryB");
 const daysEl = el("days");
-const refreshSecEl = el("refreshSec");
 const runBtn = el("runBtn");
 
 const infoA = el("infoA");
@@ -179,16 +178,6 @@ async function runLatestOnly() {
   }
 }
 
-
-// ---- auto refresh ----
-function setupAuto() {
-  if (timer) clearInterval(timer);
-
-  const sec = Number(refreshSecEl.value || 0);
-  if (sec > 0) {
-    timer = setInterval(runLatestOnly, sec * 1000);
-  }
-}
 
 
 runBtn.addEventListener("click", async () => {
