@@ -127,6 +127,8 @@ async function runFull() {
   pairText.textContent = "-";
   rateText.textContent = "-";
   timeText.textContent = "-";
+    stopAutoTimers();
+
 
   const a = countryA.value.trim();
   const b = countryB.value.trim();
@@ -178,12 +180,43 @@ async function runLatestOnly() {
   }
 }
 
+// ---- auto timers (fixed) ----
+// 最新レート：1秒
+// グラフ：30秒
+
+let rateTimer = null;
+let chartTimer = null;
+
+function stopAutoTimers() {
+  if (rateTimer) clearInterval(rateTimer);
+  if (chartTimer) clearInterval(chartTimer);
+  rateTimer = null;
+  chartTimer = null;
+}
+
+function startAutoTimers() {
+  // 重複防止
+  stopAutoTimers();
+
+  // 1秒ごとに最新レート更新
+  rateTimer = setInterval(runLatestOnly, 1000);
+
+  // 30秒ごとにグラフ更新（履歴を取り直す）
+  chartTimer = setInterval(async () => {
+    if (!currentBase || !currentQuote) return;
+
+    try {
+      const hist = await fetchHistory(currentBase, currentQuote, currentDays);
+      renderChart(hist.labels, hist.values, currentBase, currentQuote);
+    } catch (e) {
+      console.error(e);
+    }
+  }, 30000);
+}
 
 
 runBtn.addEventListener("click", async () => {
   await runFull();
-  setupAuto();
+  startAutoTimers();
 });
 
-
-refreshSecEl.addEventListener("change", setupAuto);
