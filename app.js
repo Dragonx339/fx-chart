@@ -154,7 +154,7 @@ async function runFull() {
     // 最新レート表示
     const latest = await fetchLatest(curA, curB);
     rateText.textContent = `1 ${curA} = ${Number(latest.rate).toFixed(4)} ${curB}`;
-    timeText.textContent = fmtTime(new Date());
+    timeText.textContent = `API日付: ${latest.date} / 表示時刻: ${fmtTime(new Date())}`;
 
     // グラフは「最初に1回だけ」作る
     const hist = await fetchHistory(curA, curB, days);
@@ -174,7 +174,7 @@ async function runLatestOnly() {
   try {
     const latest = await fetchLatest(currentBase, currentQuote);
     rateText.textContent = `1 ${currentBase} = ${Number(latest.rate).toFixed(4)} ${currentQuote}`;
-    timeText.textContent = fmtTime(new Date());
+    timeText.textContent = `API日付: ${latest.date} / 表示時刻: ${fmtTime(new Date())}`;
   } catch (e) {
     console.error(e);
   }
