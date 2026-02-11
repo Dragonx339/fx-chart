@@ -1,5 +1,19 @@
 // ===== fx-chart app.js (no jQuery) =====
 
+const alias = {
+  "USA": "United States",
+  "US": "United States",
+  "America": "United States",
+  "日本": "Japan",
+  "イギリス": "United Kingdom",
+  "韓国": "South Korea"
+};
+
+function normalizeCountry(s){
+  const t = s.trim();
+  return alias[t] ?? t;
+}
+
 // ---- DOM ----
 const el = (id) => document.getElementById(id);
 
