@@ -65,6 +65,20 @@ hr { border: none; border-top: 1px solid #233255; margin: 14px 0; }
 
 #chart{
   width: 100% !important;
-  height: 100% !important;
+  height: auto !important;
   display: block;
+}
+
+@media (max-width: 760px) {
+  .chartBox{
+    height: 220px; /* 200〜260で好み */
+  }
+}
+.field input{
+  font-size: 16px; /* iPhoneズーム対策 */
+}
+@media (max-width: 760px) {
+  .row2 button{
+    width: 100%;
+  }
 }
