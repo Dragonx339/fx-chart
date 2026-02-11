@@ -199,7 +199,7 @@ function startAutoTimers() {
   stopAutoTimers();
 
   // 1秒ごとに最新レート更新
-  rateTimer = setInterval(runLatestOnly, 1000);
+  rateTimer = setInterval(runLatestOnly, 10000);
 
   // 30秒ごとにグラフ更新（履歴を取り直す）
   chartTimer = setInterval(async () => {
