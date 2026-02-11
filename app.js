@@ -235,3 +235,31 @@ runBtn.addEventListener("click", async () => {
   startAutoTimers();
 });
 
+// Enterキー：空欄があればそこへ移動、全部埋まってたら実行
+const inputs = [countryA, countryB, daysEl];
+
+inputs.forEach((inp) => {
+  inp.addEventListener("keydown", async (e) => {
+    if (e.key !== "Enter") return;
+
+    e.preventDefault();
+
+    // 空欄があれば順番にそこへフォーカス
+    if (!countryA.value.trim()) {
+      countryA.focus();
+      return;
+    }
+    if (!countryB.value.trim()) {
+      countryB.focus();
+      return;
+    }
+    if (!daysEl.value.trim()) {
+      daysEl.focus();
+      return;
+    }
+
+    // 全部埋まってたら実行
+    await runFull();
+    startAutoTimers();
+  });
+});
