@@ -144,8 +144,9 @@ async function runFull() {
     stopAutoTimers();
 
 
-  const a = countryA.value.trim();
-  const b = countryB.value.trim();
+  const a = normalizeCountry(countryA.value);
+  const b = normalizeCountry(countryB.value);
+
   const days = Math.max(7, Math.min(365, Number(daysEl.value || 30)));
   daysEl.value = String(days);
 
